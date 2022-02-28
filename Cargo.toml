@@ -1,0 +1,19 @@
+[package]
+name = "catfish"
+version = "0.1.0"
+authors = ["Anicet Ebou <anicet.ebou@gmail.com>"]
+description = "A library to read and write file in catfish format"
+homepage = "https://ebedthan.github.io/rust-catfish"
+documentation = "https://doc.rs/rust-catfish"
+readme = "README.md"
+license = "MIT"
+edition = "2021"
+include = ["src/*", "LICENSE.md", "README.md"]
+
+
+[dependencies]
+thiserror = "1"
+petgraph  = {version = "0.6", default-features = false, optional = true}
+
+[features]
+graph = ["petgraph"]
