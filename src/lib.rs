@@ -36,7 +36,7 @@
 //!
 //! for result in reader.records() {
 //!     let record = result.expect("Error parsing DAG record");
-//!     println!("Graph header: {}\nNumber of vertices: {}\nEdges: {}", record.header(), record.num_vertices(), record.edges());
+//!     println!("Graph header: {}\nNumber of vertices: {}\nEdges: {:#?}", record.header(), record.num_vertices(), record.edges());
 //! }
 //! ```
 //!
@@ -46,10 +46,10 @@
 //! use std::io;
 //! use catfish::Reader;
 //!
-//! let mut records = catfish::Reader::new(io::stdin()).record();
+//! let mut records = catfish::Reader::new(io::stdin()).records();
 //!
 //! while let Some(Ok(record)) = records.next() {
-//!     println!("Graph header: {}\nNumber of vertices: {}\nEdges: {}", record.header(), record.num_vertices(), record.edges());
+//!     println!("Graph header: {}\nNumber of vertices: {}\nEdges: {:#?}", record.header(), record.num_vertices(), record.edges());
 //! }
 //! ```
 //!
@@ -99,6 +99,8 @@ impl Record {
     /// # Examples
     ///
     /// ```
+    /// use catfish::Record;
+    ///
     /// let record = Record::new();
     /// ```
     pub fn new() -> Self {
@@ -114,7 +116,9 @@ impl Record {
     /// # Examples
     ///
     /// ```
-    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")])
+    /// use catfish::Record;
+    ///
+    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")]);
     /// ```
     pub fn with_attrs(header: &str, num_vertices: usize, edges: Vec<(&str, &str, &str)>) -> Self {
         let mut e = Vec::new();
@@ -135,6 +139,8 @@ impl Record {
     /// # Examples
     ///
     /// ```
+    /// use catfish::Record;
+    ///
     /// let record = Record::new();
     /// assert!(record.is_empty());
     /// ```
@@ -169,7 +175,9 @@ impl Record {
     /// # Examples
     ///
     /// ```
-    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")])
+    /// use catfish::Record;
+    ///
+    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")]);
     /// assert_eq!(record.header(), "graph 1".to_string());
     /// ```
     pub fn header(&self) -> String {
@@ -181,7 +189,10 @@ impl Record {
     /// # Examples
     ///
     /// ```
-    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")])
+    /// use catfish::Record;
+    ///
+    /// let record = Record::with_attrs("graph 1", 2, vec![("0", "1", "3"), ("1", "2", "3")]);
+    ///
     /// assert_eq!(record.num_vertices(), 2);
     /// ```
     pub fn num_vertices(&self) -> usize {
@@ -429,35 +440,6 @@ impl<W: io::Write> Writer<W> {
         Writer { writer: bufwriter }
     }
 
-    /// Write a [`w::Record`](struct.Record.html).
-    ///
-    /// # Errors
-    /// If there is an issue writing to the `Writer`.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use bio::io::fasta::{Record, Writer};
-    /// use std::fs;
-    /// use std::io;
-    /// use std::path::Path;
-    ///
-    /// let path = Path::new("test.fa");
-    /// let file = fs::File::create(path).unwrap();
-    /// {
-    ///     let handle = io::BufWriter::new(file);
-    ///     let mut writer = Writer::new(handle);
-    ///     let record = Record::with_attrs("id", Some("desc"), b"ACGT");
-    ///
-    ///     let write_result = writer.write_record(&record);
-    ///     assert!(write_result.is_ok());
-    /// }
-    ///
-    /// let actual = fs::read_to_string(path).unwrap();
-    /// let expected = ">id desc\nACGT\n";
-    ///
-    /// assert!(fs::remove_file(path).is_ok());
-    /// assert_eq!(actual, expected)
-    /// ```
     pub fn write_record(&mut self, record: &Record) -> io::Result<()> {
         let mut rec = Vec::new();
         let edges = record.edges();
