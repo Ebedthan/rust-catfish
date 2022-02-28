@@ -37,7 +37,7 @@ let mut reader = catfish::Reader::from_file("path/to/file");
 
 for result in reader.records() {
     let record = result.expect("Error parsing DAG record");
-    println!("Graph header: {}\nNumber of vertices: {}\nEdges: {}", record.header(), record.num_vertices(), record.edges());
+    println!("Graph header: {}\nNumber of vertices: {}\nEdges: {:#?}", record.header(), record.num_vertices(), record.edges());
 }
 ```
 
