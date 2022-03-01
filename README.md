@@ -77,4 +77,4 @@ let pg = record.to_graph();
 This crate's minimum supported `rustc` version is 1.56.1.
 
 ### License
-This project is licensed under the ISC license ([LICENSE](https://github.com/Ebedthan/rust-catfish/blob/main/LICENSE) or https://opensource.org/licenses/MIT).
+This project is licensed under the MIT license ([LICENSE](https://github.com/Ebedthan/rust-catfish/blob/main/LICENSE) or https://opensource.org/licenses/MIT).
