@@ -50,9 +50,9 @@ Here is an example to write a catfish file.
 ```rust
 use catfish::Writer;
 
-let mut writer = Writer::to_file("path/to/file");
+let mut writer = Writer::to_file("path/to/file").unwrap();
 
-writer.write("graph 1", 2, vec![("a", "b", "c"), ("b", "c", "d")]);
+writer.write("graph 1", 2, vec![("a", "b", "c"), ("b", "c", "d")]).unwrap();
 ```
 
 An option to transform a catfish record to a petgraph Directed graph is available.

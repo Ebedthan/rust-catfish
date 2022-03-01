@@ -15,5 +15,8 @@ include = ["src/*", "LICENSE.md", "README.md"]
 thiserror = "1"
 petgraph  = {version = "0.6", default-features = false, optional = true}
 
+[dev-dependencies]
+tempfile = "*"
+
 [features]
 graph = ["petgraph"]

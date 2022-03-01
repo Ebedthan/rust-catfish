@@ -149,6 +149,15 @@ impl Record {
     }
 
     /// Check validity of Catfish graph record.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Record;
+    ///
+    /// let record = Record::with_attrs("graph 1", 3, vec![("0", "1", "3"), ("1", "2", "3")]);
+    /// record.check().unwrap();
+    /// ```
     pub fn check(&self) -> Result<(), &str> {
         if self.num_vertices == 0 {
             return Err("Expecting number of vertices different from 0 for Graph");
@@ -215,6 +224,15 @@ impl Record {
     }
 
     /// Clear the record.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Record;
+    ///
+    /// let mut record = Record::new();
+    /// record.clear();
+    /// ```
     pub fn clear(&mut self) {
         self.header.clear();
         self.num_vertices = 0;
@@ -222,6 +240,17 @@ impl Record {
     }
 
     #[cfg(feature = "graph")]
+    /// Transform Catfish graph record to Petgraph Graph
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Record;
+    ///
+    /// let record = Record::new();
+    ///
+    /// let pg = record.to_graph();
+    /// ```
     pub fn to_graph(&self) -> petgraph::Graph<&str, &str> {
         let mut ograph = petgraph::graph::DiGraph::new();
 
@@ -264,6 +293,14 @@ pub struct Reader<B> {
 
 impl Reader<io::BufReader<fs::File>> {
     /// Read Catfish file from given file path
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Reader;
+    ///
+    /// let reader = Reader::from_file("test/example.sgr");
+    /// ```
     pub fn from_file<P: AsRef<Path> + std::fmt::Debug>(
         path: P,
     ) -> Result<Reader<io::BufReader<fs::File>>, io::Error> {
@@ -276,6 +313,15 @@ where
     R: io::Read,
 {
     /// Create a new Catfish reader given an instance of `io::Read`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Reader;
+    /// use std::io;
+    ///
+    /// let reader = Reader::new(io::stdin());
+    /// ```
     pub fn new(reader: R) -> Self {
         Reader {
             reader: io::BufReader::new(reader),
@@ -430,6 +476,15 @@ impl Writer<fs::File> {
 
 impl<W: io::Write> Writer<W> {
     /// Create a new Catfish writer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Writer;
+    /// use std::io;
+    ///
+    /// let writer = Writer::new(io::stdout());
+    /// ```
     pub fn new(writer: W) -> Self {
         Writer {
             writer: io::BufWriter::new(writer),
@@ -440,6 +495,19 @@ impl<W: io::Write> Writer<W> {
         Writer { writer: bufwriter }
     }
 
+    /// Write a new record
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::{Record, Writer};
+    /// use std::io;
+    ///
+    /// let record = Record::new();
+    /// let mut writer = Writer::new(io::stdout());
+    ///
+    /// writer.write_record(&record).unwrap();
+    /// ```
     pub fn write_record(&mut self, record: &Record) -> io::Result<()> {
         let mut rec = Vec::new();
         let edges = record.edges();
@@ -451,6 +519,18 @@ impl<W: io::Write> Writer<W> {
         self.write(&record.header(), record.num_vertices(), rec)
     }
 
+    /// Write a new record by using attributes
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Writer;
+    /// use std::io;
+    ///
+    /// let mut writer = Writer::new(io::stdout());
+    ///
+    /// writer.write("graph1", 2, vec![("1", "2", "3"), ("1", "2", "3")]).unwrap();
+    /// ```
     pub fn write(
         &mut self,
         header: &str,
@@ -466,23 +546,32 @@ impl<W: io::Write> Writer<W> {
             .collect::<Vec<String>>();
 
         for chunk in chunks {
-            self.writer.write_all(b"#")?;
+            self.writer.write_all(b"# ")?;
             self.writer.write_all(chunk.as_bytes())?;
             self.writer.write_all(b"\n")?;
         }
 
         self.writer.write_all(num_vertices.to_string().as_bytes())?;
-        self.writer.write_all(b"\n")?;
 
         for (in_vertex, out_vertex, weight) in edges {
             self.writer
-                .write_fmt(format_args!("{}\t{}\t{}\n", in_vertex, out_vertex, weight))?;
+                .write_fmt(format_args!("\n{} {} {}", in_vertex, out_vertex, weight))?;
         }
 
         Ok(())
     }
 
     /// Flush the writer, ensuring that everything is written.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use catfish::Writer;
+    /// use std::io;
+    ///
+    /// let mut writer = Writer::new(io::stdout());
+    /// writer.flush();
+    /// ```
     pub fn flush(&mut self) -> io::Result<()> {
         self.writer.flush()
     }
@@ -492,6 +581,7 @@ impl<W: io::Write> Writer<W> {
 mod tests {
 
     use super::*;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_read() {
@@ -579,6 +669,33 @@ mod tests {
                 ("2".to_string(), "3".to_string(), "2".to_string()),
                 ("2".to_string(), "4".to_string(), "3".to_string()),
                 ("3".to_string(), "4".to_string(), "7".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn test_write() {
+        let file = NamedTempFile::new().unwrap();
+        let mut writer = Writer::to_file(file.path()).unwrap();
+
+        writer
+            .write("graph 1", 2, vec![("a", "b", "c"), ("b", "c", "d")])
+            .unwrap();
+
+        writer.flush().unwrap();
+
+        let mut reader = Reader::from_file(file.path()).unwrap();
+        let mut record = Record::new();
+
+        reader.read(&mut record).expect("got an io::Error");
+
+        assert_eq!(record.header(), "graph 1".to_string());
+        assert_eq!(record.num_vertices(), 2);
+        assert_eq!(
+            record.edges(),
+            vec![
+                ("a".to_string(), "b".to_string(), "c".to_string()),
+                ("b".to_string(), "c".to_string(), "d".to_string())
             ]
         );
     }
